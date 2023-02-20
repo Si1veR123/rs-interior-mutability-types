@@ -18,4 +18,7 @@ fn main() {
     // should be true as previous lock has been dropped
     let new_lock = mutex.try_lock();
     println!("{}", new_lock.is_ok());
+
+    let new_lock_block = mutex.lock();
+    println!("should never output this");
 }
