@@ -1,6 +1,6 @@
-extern crate data_structures;
+extern crate interior_mutability;
 
-use data_structures::mutex::Mutex;
+use interior_mutability::mutex::Mutex;
 
 fn main() {
     let mutex = Mutex::new(0u32);

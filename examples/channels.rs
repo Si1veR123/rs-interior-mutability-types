@@ -1,5 +1,5 @@
-extern crate data_structures;
-use data_structures::channels::spawn_channels;
+extern crate interior_mutability;
+use interior_mutability::channels::spawn_channels;
 use std::thread;
 
 

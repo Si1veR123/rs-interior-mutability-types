@@ -1,6 +1,6 @@
-extern crate data_structures;
+extern crate interior_mutability;
 
-use data_structures::cell::Cell;
+use interior_mutability::cell::Cell;
 
 
 fn main() {

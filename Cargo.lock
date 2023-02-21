@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "rs-data-structures"
+name = "rs-interior-mutability"
 version = "0.1.0"
