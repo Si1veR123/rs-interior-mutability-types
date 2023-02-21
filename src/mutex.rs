@@ -23,10 +23,10 @@ impl<T> Mutex<T> {
         }
     }
 
-    pub fn lock(&self) -> Result<MutexGuard<T>, ()> {
+    pub fn lock(&self) -> Result<MutexGuard<T>, ()> 
         println!("{:?}", &*self.lock_state.borrow());
         while let MutexLockState::Locked = &*self.lock_state.borrow() {
-            thread::sleep(Duration::from_millis(100));
+            thread::sleep(Duration::from_millis(1));
         }  
 
         self.lock_state.replace(MutexLockState::Locked);
