@@ -23,8 +23,7 @@ impl<T> Mutex<T> {
         }
     }
 
-    pub fn lock(&self) -> Result<MutexGuard<T>, ()> 
-        println!("{:?}", &*self.lock_state.borrow());
+    pub fn lock(&self) -> Result<MutexGuard<T>, ()> {
         while let MutexLockState::Locked = &*self.lock_state.borrow() {
             thread::sleep(Duration::from_millis(1));
         }  
@@ -56,6 +55,16 @@ impl<T> Mutex<T> {
 
     fn unlock(&self) {
         self.lock_state.replace(MutexLockState::Unlocked);
+    }
+
+    pub fn into_inner(self) -> Result<T, ()> {
+        let data = self.data.into_inner();
+        Ok(data)
+    }
+
+    pub fn get_mut(&mut self) -> &mut T {
+        // mutable reference to self ensures no mutexguards are out
+        self.data.get_mut()
     }
 }
 
