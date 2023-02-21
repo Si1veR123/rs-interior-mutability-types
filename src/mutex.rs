@@ -1,5 +1,5 @@
 use std::cell::{UnsafeCell, RefCell};
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::thread;
 use std::time::Duration;
 
@@ -23,17 +23,17 @@ impl<T> Mutex<T> {
         }
     }
 
-    pub fn lock(&self) -> Result<MutexGuard<T>, ()> {
+    pub fn lock(&self) -> MutexGuard<T> {
         while let MutexLockState::Locked = &*self.lock_state.borrow() {
             thread::sleep(Duration::from_millis(1));
         }  
 
         self.lock_state.replace(MutexLockState::Locked);
 
-        Ok(MutexGuard::new(
+        MutexGuard::new(
             self.data.get(),
             &self
-        ))
+        )
     }
 
     pub fn try_lock(&self) -> Result<MutexGuard<T>, ()> {
@@ -68,6 +68,10 @@ impl<T> Mutex<T> {
     }
 }
 
+unsafe impl<T: Send> Send for Mutex<T> {}
+unsafe impl<T: Sync> Sync for Mutex<T> {}
+
+
 pub struct MutexGuard<'a, T> {
     data: Option<Box<T>>,
     mutex: &'a Mutex<T>
@@ -98,5 +102,11 @@ impl<'a, T> Deref for MutexGuard<'a, T> {
 
     fn deref(&self) -> &Self::Target {
         self.data.as_ref().unwrap()
+    }
+}
+
+impl<'a, T> DerefMut for MutexGuard<'a, T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.data.as_mut().unwrap()
     }
 }

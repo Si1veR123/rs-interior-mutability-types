@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "rs-mutex"
+name = "rs-data-structures"
 version = "0.1.0"
