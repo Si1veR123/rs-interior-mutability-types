@@ -1,34 +1,27 @@
-use std::cell::{UnsafeCell, RefCell};
+use std::cell::UnsafeCell;
 use std::ops::{Deref, DerefMut};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use std::time::Duration;
 
 
-#[derive(Debug)]
-enum MutexLockState {
-    Unlocked,
-    Locked
-}
-
 pub struct Mutex<T> {
     data: UnsafeCell<T>,
-    lock_state: RefCell<MutexLockState>
+    lock_state: AtomicBool
 }
 
 impl<T> Mutex<T> {
     pub fn new(data: T) -> Mutex<T> {
         Mutex {
             data: UnsafeCell::new(data),
-            lock_state: RefCell::new(MutexLockState::Unlocked)
+            lock_state: AtomicBool::new(false)
         }
     }
 
     pub fn lock(&self) -> MutexGuard<T> {
-        while let MutexLockState::Locked = &*self.lock_state.borrow() {
+        while let Err(_) = AtomicBool::compare_exchange_weak(&self.lock_state, false, true, Ordering::Acquire, Ordering::Relaxed) {
             thread::sleep(Duration::from_millis(1));
-        }  
-
-        self.lock_state.replace(MutexLockState::Locked);
+        }
 
         MutexGuard::new(
             self.data.get(),
@@ -37,13 +30,10 @@ impl<T> Mutex<T> {
     }
 
     pub fn try_lock(&self) -> Result<MutexGuard<T>, ()> {
-        let unlocked = match &*self.lock_state.borrow_mut() {
-            MutexLockState::Unlocked => true,
-            MutexLockState::Locked => false,
-        };
+        let unlocked = !self.lock_state.load(Ordering::Acquire);
 
         if unlocked {
-            self.lock_state.replace(MutexLockState::Locked);
+            self.lock_state.store(true, Ordering::Relaxed);
             Result::Ok(MutexGuard::new(
                 self.data.get(),
                 &self
@@ -54,7 +44,7 @@ impl<T> Mutex<T> {
     }
 
     fn unlock(&self) {
-        self.lock_state.replace(MutexLockState::Unlocked);
+        self.lock_state.store(false, Ordering::Relaxed);
     }
 
     pub fn into_inner(self) -> Result<T, ()> {
