@@ -31,13 +31,14 @@ pub struct ChannelReceiver<T> {
 }
 
 impl<T> ChannelReceiver<T> {
-    pub fn try_recv(&self) -> Option<T> {
-        self.q.lock().pop()
+    pub fn try_recv(&self) -> Result<Option<T>, ()> {
+        // will return Err(()) if cannot lock, will return Ok(None) if empty, will return Ok(T) if item available
+        Ok(self.q.try_lock()?.pop())
     }
 
     pub fn recv(&self) -> T {
         loop {
-            match self.try_recv() {
+            match self.q.lock().pop() {
                 Some(d) => return d,
                 None => thread::sleep(Duration::from_millis(1))
             }
